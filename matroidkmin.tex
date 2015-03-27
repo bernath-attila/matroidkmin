@@ -1,0 +1,907 @@
+\documentclass[a4paper,10pt]{article}
+%\documentclass{poszmete}
+\usepackage[margin=20mm,nohead]{geometry}
+
+
+\usepackage{amsmath,amssymb,graphicx}
+
+%\usepackage{} %% Please use additional packages only if absolutely necessary.
+               %% Make sure that these packages are compatible with amsmath.
+
+
+\usepackage{latexsym,amssymb,graphics,graphicx,epsfig,color,enumerate}
+\usepackage{xspace}
+\usepackage{amsthm}
+
+\usepackage{t1enc}
+\usepackage[latin2]{inputenc}
+
+\input{pszkod.ltx}
+
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\I}{\mathcal{I}} 
+\newcommand{\s}{\mathcal{S}}
+\newcommand{\T}{\mathcal{T}}
+\newcommand{\p}{\mathcal{P}}
+\newcommand{\R}{\mathcal{R}}
+\newcommand{\Z}{\mathcal{Z}}
+\newcommand{\K}{\mathcal{K}}
+
+
+\newcommand{\cB}{\ensuremath{\mathcal{B}}}
+\newcommand{\cL}{\ensuremath{\mathcal{L}}}
+\newcommand{\cE}{\ensuremath{\mathcal{E}}}
+\newcommand{\cF}{\ensuremath{\mathcal{F}}}
+\newcommand{\cX}{\ensuremath{\mathcal{X}}}
+\newcommand{\cY}{\ensuremath{\mathcal{Y}}}
+\newcommand{\cZ}{\ensuremath{\mathcal{Z}}}
+\newcommand{\cP}{\ensuremath{\mathcal{P}}}
+\newcommand{\tD}{\tilde D}
+\newcommand{\fixme}[1]{\textbf{FIX ME!!! #1}}
+
+\newcommand{\Rset}{\mathbb{R}}
+\newcommand{\Zset}{\mathbb{Z}}
+%\newcommand{\qedsymbol}{$\Box$}
+
+
+
+
+ \newtheorem{thm}{Theorem }
+ \newtheorem{problem}{Problem }
+ \newtheorem{definition}{Definition }
+ \newtheorem{claim}{Claim }
+ \newtheorem{cor}{Corollary }
+ \newtheorem{lemma}{Lemma}
+
+%% \newtheorem{question}{Question }
+%% \newtheorem{property}{Property }
+ \newtheorem{conjecture}{Conjecture }
+%% \newtheorem{remark}{Remark }
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Blocking optimal $k$-arborescences}
+\author{Attila Bern\'ath\thanks{
+MTA-ELTE Egerv\'ary Research Group,
+Department of Operations Research, E\"otv\"os University, P\'azm\'any P\'eter s\'et\'any 1/C, Budapest, Hungary, H-1117.
+%% SZTAKI, Institute for Computer Science and Control, 
+%% Lágymányosi u. 11, Budapest, Hungary H-1111.
+Part of the research was done while the author was at Warsaw University, Institute of Informatics, ul. Banacha 2, 02-097 Warsaw,  Poland. Research was supported by the ERC StG project PAAl no. 259515.
+E-mail: {\tt bernath@cs.elte.hu}.} 
+\and 
+Tamás Király\thanks{MTA-ELTE Egerv\'ary Research Group,
+Department of Operations Research, E\"otv\"os University, P\'azm\'any P\'eter s\'et\'any 1/C, Budapest, Hungary, H-1117.
+E-mail: {\tt tkiraly@cs.elte.hu}.} 
+%% \and 
+%% Gyula Pap\thanks{MTA-ELTE Egerv\'ary Research Group,
+%% Department of Operations Research, E\"otv\"os University, P\'azm\'any P\'eter s\'et\'any 1/C, Budapest, Hungary, H-1117. Supported by OTKA grant no.\ K109240.
+%% E-mail: {\tt gyuszko@cs.elte.hu}.} 
+}
+
+
+
+\begin{document}
+
+\maketitle
+
+\newcommand{\karb}{$k$-arborescence}
+\newcommand{\krarb}[1][r]{$#1$-rooted $k$-arborescence}
+
+\begin{abstract}
+Given a digraph $D=(V,A)$ and a positive integer $k$, a subset
+$B\subseteq A$ is called a \textbf{\karb}, if it is the disjoint union
+of $k$ spanning arborescences. When also arc-costs $c:A\to \Rset_+$ are given, 
+minimizing the cost \karb\ is well-known to be tractable. In this paper
+we take on the following problem: what is the minimum cardinality of a set of
+arcs the removal of  which destroys every minimum $c$-cost \karb. 
+%% Actually, the more general weighted problem is also considered, that is, 
+%% arc weights $w:A\to \Rset_+$ (unrelated to $c$) are also given, and the 
+%% goal is to find a minimum weight set of arcs the removal of  which 
+%% destroys every minimum $c$-cost \karb. 
+An equivalent version of this problem is where the roots of the
+arborescences are fixed in advance. In an earlier paper
+\cite{mincostarb} we solved this problem for $k=1$.  In this paper we
+give an algorithm solving this problem. The algorithm is polynomial if
+$k$ is fixed (not part of the input).
+%% This work reports on
+%% another partial result on the problem: we solve the case when $c\equiv 1$ is uniform 
+%% -- that is, the set of arcs needs to cover all \karb{s}. 
+%% The solution uses a result of Bárász, Becker and Frank \cite{bbf} saying that 
+%% the family of so-called insolid sets (sets with the property that every 
+%% proper subset has a larger in-degree) satisfies the Helly-property, and thus 
+%% can be (efficiently) represented as a subtree hypergraph. 
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Keywords (3 $\sim$ 5 words)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{quote}
+{\bf Keywords: arborescences, polynomial algorithm, covering}
+\end{quote}
+\vspace{5mm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Text
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+%\section{Covering minimum cost arborescences}
+
+\section{Introduction}
+
+
+Let $D=(V,A)$ be a digraph with vertex set $V$ and arc set $A$. A
+\textbf{spanning arborescence} is a subset $B\subseteq A$ that is a
+spanning tree in the undirected sense, and every node has in-degree at
+most one. Thus there is exactly one node, the \textbf{root node}, with
+in-degree zero.  Equivalently, a spanning arborescence is a subset
+$B\subseteq A$ with the property that there is a root node $r\in V$
+such that $\varrho_B(r)=0$, and $\varrho_B(v)=1$ for $v\in V-r$, and
+$B$ contains no cycle. We will also call a spanning arborescence as a 
+\textbf{arborescence} for short, when the set of nodes is obvious from 
+context. If $r\in V$ is the root of spanning arborescence $B$ then 
+$B$ is said to be an \textbf{$r$-rooted arborescence} (note that this notation slightly differs from that used in \cite{mincostarb}).
+
+Given also a positive integer $k$, a subset $B\subseteq A$ is called a
+\textbf{\karb}, if it is the arc-disjoint union of $k$ spanning
+arborescences. 
+%If $x:V\to \Zset_+$ is such that every node $v$ is the root of $x(v)$ arborescences 
+%in $B$ then we say that $B$ is \textbf{\karb\ of root vector $x$}. 
+In the special case when every
+arborescence has the same root $r$ we call $B$ a \textbf{\krarb}.
+
+Given $D=(V,A)$, $k$ and a cost function $c:A\to \Rset_+$, it is well
+known to find a \textbf{minimum cost \karb} in polynomial time, and to find a \textbf{minimum cost \krarb} just as well. 
+%(or a minimum cost \karb\ of root vector $x$, with $x$ also given in advance).
+See \cite{schrijver}, Chapter 53.8 for a reference, where several related problems are considered. The existence of a \krarb\ is characterized by Edmonds' disjoint arborescence theorem, %\cite{edmondsdisjoint} 
+while the existence of a \karb\ is characterized by a theorem of Frank \cite{frank1978disjoint}. Frank also gave a linear programming description of the convex hull of \karb{s}, generalizing Edmonds' linear programming description of the convex hull of \krarb{s}. The problem of finding a minimum cost \krarb\ may also be solved with the use of these results, either via a reduction to minimum weight \krarb{s}, or minimum weight matroid intersection.
+%\fixme{Schrijver does not really speak about optimal \karb, only about optimal \krarb. Neither does Frank.} 
+  
+In this paper we consider the following covering problems, which are polynomial time equivalent. 
+
+\begin{problem}[\textbf{Blocking optimal \karb s}]\label{prob:1}
+Given a digraph $D=(V,A)$, a positive integer $k$, a cost
+function $c:A\to \Rset_+$ and a nonnegative weight function $w:A\to
+\Rset_+$, find a subset $H$ of the arc set such that $H$ intersects every
+minimum $c$-cost \karb, and $w(H)$ is minimum.
+\end{problem}
+
+Here the expression "intersects" simply means that the two have nonempty intersection. 
+We remark that Problem \ref{prob:1} is polynomially equivalent with the version 
+where the root is also given in advance, that is, the problem of blocking optimal
+\krarb s. 
+
+\begin{problem}[\textbf{Blocking optimal \krarb s}]\label{prob:2}
+Given a digraph $D=(V,A)$, a node $r\in V$, a positive integer $k$, a cost
+function $c:A\to \Rset_+$ and a nonnegative weight function $w:A\to
+\Rset_+$, find a subset $H$ of the arc set such that $H$ intersects every
+minimum $c$-cost \karb, and $w(H)$ is minimum.
+\end{problem}
+
+In section \ref{sec:variants} we will show that the two problems are polynomial time equivalent. 
+
+In our previous paper \cite{mincostarb} we have solved the special case of Problem \ref{prob:1} when we fix $k=1$. Our conjecture is that the problem is also polynomial time solvable when $k$ is not fixed. The main result of this paper is that the problem is polynomial time solvable when $k$ is part of the input, and $c$ is set to be constant -- that is, when $H$ is required to intersect \emph{every} \karb .
+
+We remark that the version of Problem \ref{prob:1} and Problem \ref{prob:2} where we set $c$ to be constant are \emph{not} easily seen to be equivalent - actually, Problem \ref{prob:2} with $c$ constant is solvable as a corollary of Edmonds' disjoint arborescences theorem by taking all but $k-1$ arcs from a minimum cut. Thus it is important to note that in the sequel we will consider the version of Problem \ref{prob:1} (and not Problem \ref{prob:2} !) with constant cost function $c$. 
+
+%% : how to find
+%% a minimum cardinality set $H\subseteq A$ such that $H$ intersects
+%% every minimum cost $r$-arborescence. In other words
+
+\section{Notation}
+
+Let us overview some of the notation and definitions used in the
+paper. For us a digraph is a directed graph, and a graph means an
+undirected graph.  The arc set of the digraph $D$ will also be denoted
+by $A(D)$.  Given a digraph $D=(V,A)$ and a node set $Z\subseteq V$,
+let $D[Z]$ be the digraph obtained from $D$ by deleting the nodes of
+$V-Z$ (and all the arcs incident with them). If $B\subseteq A$ is a
+subset of the arc set, then we will identify $B$ and the subgraph
+$(V,B)$. Thus $B[Z]$ is obtained from $(V,B)$ by deleting the nodes of
+$V-Z$ (and the arcs of $B$ incident with them). The set of arcs of $D$
+entering $Z$ is denoted $\delta_D^{in}(Z)$, the number of these arcs
+is $\varrho_D(Z)=|\delta_D^{in}(Z)|$.  For a graph $G=(V,E)$ and a
+subset $X\subseteq V$ let $i_G(X)$ denote the number of edges with
+both endpoints in $X$.
+%% An \textbf{arc-weighted digraph} is
+%% a triple $D_w=(V,A,w)$ where $(V,A)$ is a digraph and a weight function
+%% $w:A\to \Rset_+$. For an arc-weighted digraph $D_w=(V,A,w)$ and subset
+%% $X$ of its node set we let $\varrho_{D_w}(X)=\sum\{w_a: a $ enters
+%% $X\}$ denote the weighted indegree.
+A \textbf{subpartition} of a
+subset $X$ of $V$ is a collection of pairwise disjoint non-empty
+subsets of $X$: note that $\emptyset$ cannot be a member of a
+subpartition, but $\emptyset$ is a valid subpartition, having no
+members at all. For a vector $x:A\to \Rset$ and subset $Z\subseteq A$
+we let $x(Z)=\sum_{v\in Z}x_v$.
+
+%The definition of a matroid can be found in \cite{ize}
+For general background on \textbf{matroids} we refer the reader to \cite{frank2011connections}. Given a
+matroid $M=(S,r)$ (where $S$ is the ground set and $r$ is the renk function), and a positive integer $k$, the \textbf{$k$-shortening} of
+$M$ is the matroid $(S, r')$ where $r'(E)=\min \{r(E), k\}$.
+
+Given a function $p:2^S\to \Rset$, a subset $X\subseteq S$ is called
+\textbf{separable} if there exists a partition $X_1, X_2, \dots, X_t$
+of $X$ such that $p(X)\le \sum_i p(X_i)$. The function $p$ is called
+\textbf{near supermodular} if $p(X)+p(Y)\le p(X\cap Y) + p(X\cup Y)$
+holds for every intersecting pair $X,Y\subseteq V$ of non-separable
+sets. The \textbf{(upper) truncation} of a set function $p:2^S\to \Rset$ is a
+set function $p^\wedge:2^S\to \Rset$ defined by
+\[p^\wedge(W)=\max\{\sum \{p(Z): Z\in \cZ\}: \cZ \mbox{ is a partition of }W\}.
+\]
+
+\begin{thm}\cite[Theorem 15.1.1]{frank2011connections}\label{thm:wedge}
+The truncation of a near supermodular function is monotone and fully
+supermodular. The truncation of a nonnegative function is monotone.
+\end{thm}
+
+
+\section{Equivalence of versions}\label{sec:variants}
+
+
+\begin{thm}\label{thm:versions}
+The following problems are polynomially equivalent (where $D_i=(V_i,A_i)$ is a
+digraph, $k$ a positive integer, $c_i:A_i\to \Rset_+$ and 
+$w_i:A_i\to \Rset_+$ for $i=1,2$). 
+%%  Let us be given a digraph $D=(V,A)$, a positive integer
+%% $k$, a cost function $c:A\to \Rset$ and a nonnegative weight function
+%% $w:A\to \Rset_+$. Problem \ref{prob:1} is polynomially equivalent to
+%% the following problems
+\begin{enumerate}
+\item \textbf{Blocking optimal \karb s (Problem \ref{prob:1})}: Given $D_1$, $k$, $c_1$, $w_1$, find $H\subseteq A_1$ so that
+  $H$ intersects every minimum $c_1$-cost \karb\ in $D_1$, and
+  $w_1(H)$ is minimum.
+\item \textbf{Blocking optimal \krarb s (Problem \ref{prob:2})}: Given $D_2$, $k$, $c_2$, $w_2$ and a
+  node $r\in V_2$, find $H\subseteq A_2$ so that $H$ intersects every
+  minimum $c_2$-cost \krarb\ in $D_2$, and $w_2(H)$ is minimum.
+%\item \textbf{Blocking optimal \karb s of root vector $x$}: Given
+%  $D_3,k,c_3,w_3$ and a vector $x:V_3\to \Zset_+$ with $x(V_3)=k$, find
+%  $H\subseteq A_3$ so that $H$ intersects every minimum $c_3$-cost
+%  \karb\ in $D_3$ of root vector $x$, and $w_3(H)$ is minimum.
+\end{enumerate}
+\end{thm}
+\begin{proof}
+%We show that the first and the 2nd problems are polynomial time
+%equivalent: the equivalence of the 2nd and the 3rd problems can be
+%shown similarly.
+
+Problem \ref{prob:2} reduces to Probem \ref{prob:1} by deleting all arcs entering node $r$ from the input digraph. For the reverse reduction, consider an instance $D_1,k,c_1,w_1$ of the Problem \ref{prob:1}, and define an instance of Problem \ref{prob:2} as follows. Let $V_2=V_1+r$ with a new node $r$, and let $D_2=(V_2, A_1\cup \{rv: v\in V_1\})$. Let the costs defined
+as $c_2(a)=c_1(a)$ for every $a\in A_1$ and $c_2(rv)=C$ for every new
+arc $rv (v\in V_1)$ where $C=\sum_{a\in A_1}c_1(a)+1$. Finally, the
+weights are defined as follows: $w_2(a)=w_1(a)$ for every $a\in A_1$
+and $w_2(rv)=W$ for every new arc $rv (v\in V_1)$ where $W=\sum_{a\in
+  A_1}w_1(a)+1$. By these choices, in the instance to Problem \ref{prob:2}
+given by $D_2,k,c_2,w_2$ and $r$, the minimum $c_2$-cost \krarb s
+naturally correspond to minimum $c_1$-cost $k$-arborescences in $D_1$
+(since they will use exactly one arc leaving $r$), and for blocking
+these we will not use the new arcs because of their large weight. 
+%The reduction in the other direction is simpler: given $D_2$ and $r$,
+%delete every arc that enters $r$ to get $D_1$. Solving the first
+%problem for this modified instance (where $c_1$ and $w_1$ are just the
+%restrictions of $c_2$ and $w_2$ for the remaining arcs) naturally gives the
+%solution to the original  version.
+\end{proof}
+
+\section{Reformulation of the problem}
+
+\fixme{Finish}
+
+In this section we will show that the problem can be formulated as
+blocking \cL-tight \karb{s} for some laminar family $\cL$.
+
+\begin{definition}
+Given a digraph $D=(V,A)$ and a laminar family $\cL\subseteq 2^V$, a
+\karb\ $B\subseteq A$ of root vector $x$ is said to be
+\textbf{\cL-tight} if $\varrho_B(F)=x(V-F)$ holds for every $F\in
+\cL$. Equivalently, \karb\ $B\subseteq A$ is \textbf{\cL-tight} if and
+only if $B[F]$ is a \karb\ in $D[F]$ for every $F\in \cL$.
+\end{definition}
+
+Note that this definition can be equivalently (and more intuitively)
+told as follows. A \karb\ $B\subseteq A$ is $\cL$-tight if and only if
+for an arbitrary decomposition $B=\cup_{i=1}^kB_i$ of $B$ into
+arborescences and arbitrary $F\in \cL$ the following holds: every
+arborescence with root outside $F$ enters $F$ exactly once, and every
+arborescence with root inside $F$ does not enter $F$ at all. That is,
+the arborescences enter the members of \cL\ \emph{the smallest possible number
+  of times}.
+
+\begin{thm}
+Problem \ref{prob:1} can be reduced to the following problem in polynomial time.
+\begin{problem}\label{prob:lam}
+Given a digraph $D=(V,A)$, a weight function $w:A\to \Rset_+$ and a
+laminar family $\cL\subseteq 2^V$, find a subset $H\subseteq A$ such
+that $H$ intersects every \cL-tight \karb, and $w(H)$ is minimum.
+\end{problem}
+\end{thm}
+
+\fixme{I guess we could again show that Problem \ref{prob:1} and Problem \ref{prob:lam} are polynomially equivalent, but shall we care about that?} 
+
+\begin{proof}
+We will show that the problem of blocking optimal \krarb s (that is,
+the second version in Theorem \ref{thm:versions}) can be reduced to
+Problem \ref{prob:lam} in polynomial time: this together with Theorem
+\ref{thm:versions} gives a proof of this theorem. Given a digraph
+$D=(V,A)$, a cost function $c:A\to \Rset$ \fixme{do we need to assume
+  the nonnegativity?}, a node $r\in V$ and a positive integer $k$,
+consider the LP $\min\{cx: x\in \Rset^A, 0\le x\le 1, \varrho_x(Z)\ge
+k$ for ever non-empty $Z\subseteq V-r\}$. By Theorem
+\ref{thm:karbhull}, this always has an integer solution, which is a
+minimum $c$-cost \krarb. Let $y^*,z^*$ be an optimal solution of the
+dual 
+%\begin{equation}\label{lp:dual}
+$\max\{\sum_{Z\in 2^{V-r}-\emptyset}ky_Z-\sum_{a\in A}z_a:
+y\in \Rset^{2^{V-r}-\emptyset}, z\in \Rset^A, y\ge 0,z\ge 0,\\
+\sum_{Z: a\in \delta^{in}(Z)}y_Z-z_a\le c_a$ for every $a\in
+A\}$.
+Standard uncrossing techniques show that we can assume that the
+support of $y^*$ is a laminar family $\cL\subseteq 2^V$. The
+complementary slackness conditions show that a feasible primal
+solution $x^*$ is optimal if and only if the following 3 conditions hold.
+\begin{enumerate}
+\item $x^*_a=0$ for every $a\in A$ with $\sum_{Z: a\in \delta^{in}(Z)}y^*_Z-z^*_a< c_a$ (non-tight arcs),
+\item $\varrho_{x^*}(Z)=k$ for every $Z\in \cL$, and
+\item $x^*_a=1$ for every $a\in A$ with $z^*_a>0$ (obligatory arcs).
+\end{enumerate}
+If there exists an obligatory arc, then only one such arc covers all
+the optimal \krarb s \fixme{This is only the unweighted problem then,
+  that is Problem \ref{prob:1} with $w\equiv 1$!}. If not, then the
+problem is equivalent with choosing a minimum weight subset of the
+tight arcs that intersect every $\cL$-tight \krarb.  \fixme{The
+  polynomiality is not really proved yet.}\fixme{Should we say that
+  $r$ is not entered by arcs?}
+\end{proof}
+
+
+\begin{conjecture}[The $k$-min-min conjecture]
+Given a digraph $D=(V,A)$ and a laminar family $\cL\subseteq 2^V$,
+there exists an \cL-tight \karb\ if and only if
+$\sum_{X\in \cX} f_{D[F]}(X) \ge k(|\cX|-1):$ for any $F\in \cL\cup
+\{V\}$ and subpartition $\cX$ of $F$
+\end{conjecture}
+
+One can show that the condition is necessary in the conjecture.  If
+the conjecture holds then it implies a polynomial algorithm for fixed
+$k$ (and uniform weight, at least).
+
+\fixme{The $k$-min-min conjecture was disproved by Tamás.}
+
+\newcommand{\indep}{irrespective} 
+
+\section{Independent \karb{s}}
+
+Given a digraph $D=(V,A)$ and a matroid
+$M_v=(\delta^{in}_D(v), r_v)$ for every $v\in V$. 
+%Assume that
+%$\delta^{in}_D(s)=\emptyset$. 
+
+A \karb\ $B\subseteq A$ is said to
+be \textbf{\indep} if $B\cap \delta^{in}_D(v)$ is independent for
+every $v\in V$ (it would be more natural to call it an independent
+\karb, however this term is already used in many meanings, e.g. in
+\cite{frank2013independent} and \cite{Csabi}, that we decided to choose a
+new name). Let us define the matroid $M_\oplus=(A, r_\oplus)$ as the
+direct sum of the matroids $M_v$ $ (v\in V)$.
+
+
+\begin{thm}\label{thm:indepkarb}
+Given a digraph $D=(V,A)$ and matroids $M_v=(\delta^{in}_D(v), r_v)$
+for every $v\in V$, there exists an \indep\ \karb\
+in $D$ if and only if \eqref{eq:subpart} holds for every subpartition \cX\ of $V$.
+\begin{equation}\label{eq:subpart}
+\sum \{r_\oplus(\delta^{in}_{D}(X)): X\in \cX\} \ge k(|\cX|-1)
+\end{equation}
+\end{thm}
+\begin{proof}
+The necessity of \eqref{eq:subpart} is clear: if $B\subseteq A$ is an
+\indep\ \karb\ and \cX\ is a subpartitionof $V$ then $k(|\cX|-1)\le
+\sum_{X\in \cX} \varrho_B(X)\le \sum_{X\in
+  \cX}r_\oplus(\delta^{in}_{D}(X))$.  In order to prove sufficiency,
+observe that this problem is in fact a matroid intersection
+problem. Let $M_1=(A,r_1)$ be $k$ times the graphic matroid of $D$ (in
+the undirected sense). Note that the condition \eqref{eq:subpart}
+implies that $D$ contains $k$ edge-disjoint spanning trees, that is
+$r_1(A)=k(|V|-1)$. For every $v\in V$ let $M_v'=(\delta^{in}_D(v),
+r'_v)$ be the $k$-shortening of $M_v$, that is $r'_v(E)=\min\{r_v(E),
+k\}$ for any $E\subseteq \delta^{in}_D(v)$. Let furthermore $M_2=(A,
+r_2)=\oplus_{v\in V} M'_v$ be the direct sum of the matroids
+$M'_v$. Observe that $B\subseteq A$ is an \indep\ \karb\ in $D$ if and
+only if $B$ is a common independent set of $M_1$ and $M_2$ and has
+size $k(|V|-1)$ (note that we need $r_v'\le k$ for this
+equivalence). By Edmonds matroid intersection theorem \cite{edmonds},
+such a $B$ exists if and only if
+\begin{equation}\label{eq:matroidint}
+r_1(E)+ r_2(A-E)\ge k(|V|-1)\mbox{ for ever } E \subseteq A.
+\end{equation}
+We show that our condition \eqref{eq:subpart} implies
+\eqref{eq:matroidint}. Assume that \eqref{eq:matroidint} fails for
+some $E$. Clearly, we can assume that $E$ is closed in $M_1$ and
+$M_1|E$ does not contain bridges (a \textbf{bridge} in a matroid is an element
+that is contained in every base). 
+\begin{claim}
+If $E\subseteq A$ is closed in $M_1$ and $M_1|E$ does not contain
+bridges then there exists a partition $\cY$ of $V$
+such that $r_1(D[Y])=k(|Y|-1)$ for every $Y\in \cY$ and
+$E=A-\cup_{Y\in \cY}\delta^{in}_D(Y)$.
+%$E=\cup_{Y\in \cY}D[Y]=A-\cup_{Y\in \cY}\delta^{in}_D(Y)$.
+\end{claim}
+\begin{proof}
+We say that a non-empty $Y\subseteq V$ is \emph{tight} (with respect
+to $E$) if $r_1(E[Y])= k(|Y|-1)$. In other words, $Y$ is tight if
+$E[Y]$ contains $k$ edge-disjoint spanning trees. For example, sets of
+size 1 are tight. If $Y_1, Y_2$ are both tight and $Y_1\cap Y_2\ne
+\emptyset$ then $Y_1\cup Y_2$ is tight, too. To prove this let
+$T_1\subseteq E$ be a tree spanning $Y_1$ and $T_2\subseteq E$ be a
+tree spanning $Y_2$ and observe that $T_1$ can be extended to a tree
+spanning $Y_1\cup Y_2$ using the edges on $T_2-E[Y_1]$. Therefore let
+$\cY$ be the partition of $V$ consisting of the maximal tight
+sets. Since $E$ is closed in $M_1$, it contains every arc of $D$ that
+is induced in some $Y\in \cY$. Let $G'=(V', E')$ be the graph that is
+obtained from $(V,E)$ after contracting every $Y\in \cY$ into a node
+$y$ (and after forgetting about the orientation of the arcs). We claim
+that $i_{G'}(Z)<k(|Z|-1)$ for every $Z\subseteq V'$ with $|Z|\ge
+2$. Assume not and take an inclusionwise minimal counterexample
+$Z$. Then $G'[Z]$ contains $k$ edge-disjoint spanning trees,
+%% (the edge set of $G'[Z]$ can be covered by $k$ forests, since
+%% $i_{G'}(Z')\le k(|Z'|-1)$ for every $Z'\subsetneq Z$, but these
+%% forests are in fact trees spanning $Z$, since $i_{G'}(Z)\ge k(|Z|-1)$
+%% \fixme{This is not quite true this way, but do we want to explain
+%%   this?}) 
+which contradicts with the maximality of the tight sets in
+$\cY$. This implies that the bases of $M_1|E$ contain every arc of $E$
+going between different members of the partition $\cY$. But since
+$M_1|E$ does not contain bridges, $E=\cup_{Y\in \cY}D[Y]$, as claimed.
+\end{proof}
+%By the claim, there exists a partition $\cY$ of $V$ such that
+%$r_1(D[Y])=k(|Y|-1)$ for every $Y\in \cY$ and 
+Consider the partition \cY\ assured by the claim and observe
+$r_1(A-\cup_{Y\in \cY}\delta^{in}_D(Y)) + r_2(\cup_{Y\in \cY}\delta^{in}_D(Y))
+=k(|V|-t) + \sum_{Y\in \cY} r_2(\delta^{in}_D(Y)) < k(|V|-1) $, that
+is $\sum_{Y\in \cY} r_2(\delta^{in}_D(Y)) < k(|\cY |-1)$. Let
+$\cX=\{Y\in \cY: r_2(Y)<k \}$ and note $\sum_{X\in \cX}
+r_2(\delta^{in}_D(X)) < k(|\cX|-1)$ holds, too.  But
+$r_2(\delta^{in}_{D}(X))=r_\oplus(\delta^{in}_{D}(X))$ for every $X\in \cX$ and we get a contradiction
+with \eqref{eq:subpart}.
+\end{proof}
+
+Note that if $r_v\le k$ in Theorem \ref{thm:indepkarb} then it is enough to
+require \eqref{eq:subpart} for partitions. Indeed, if a subpartition
+\cX\ fails to satisfy \eqref{eq:subpart} then $\cX\cup\{\{v\}: v\notin
+\cup\cX\}$ is a partition that  violates \eqref{eq:subpart}, too.
+
+As a special case of the previous theorem we mention the following result of Frank.
+
+\begin{thm}[Frank, \cite{frank1979covering,frank1978disjoint}]\label{thm:Frank}
+Given a digraph $D=(V,A)$ and a positive integer $k$, there exists a
+\karb\ in $D$ if and only if $\sum_{X\in \cX}\varrho_D(X)\ge k(|\cX|-1)
+$ for every subpartition $\cX$ of $V$.
+\end{thm}
+
+
+
+Let us fix some $s\in V$. From now on we will be interested in
+\indep\  \krarb[s]: this only exists if $r_v(\delta^{in}_D(v))=k$
+for every $v\in V-s$, therefore we will assume this from now on.
+Define $\cB_s=\{I\subseteq \delta^{out}_D(s): |I|= k$ and there exists
+an \indep\  \krarb[s] $B\subseteq A$ with $I=B\cap
+\delta^{out}_D(s)\}$. Our aim below is to show that $\cB_s$ defines
+the family of bases of a matroid on ground set $\delta_D^{out}(s)$.
+
+
+\begin{lemma}\label{lem:rankin}
+Given a digraph $D=(V,A)$, a node $s\in V$ and  matroids
+$M_v=(\delta^{in}_D(v), r_v)$ of rank $k$ for every $v\in V-s$. Let $I\subseteq
+\delta^{out}(s)$ with $|I|=k$. The following statements are
+equivalent.
+\begin{enumerate}[(i)]
+\item $I\in \cB_s$, \label{it:1}
+\item $I$ satisfies \eqref{eq:rankin} for every non-empty $X\subseteq V-s$, \label{it:2}
+\begin{equation}\label{eq:rankin}
+r_\oplus(\delta^{in}_{I\cup D[V-s]}(X))\ge k
+\end{equation}
+\item $I$ satisfies \eqref{eq:intpoly} for every $Z\subseteq \delta^{out}_D(s)$ and
+non-empty $X\subseteq V-s$. \label{it:3}
+\begin{equation}\label{eq:intpoly}
+|I\cap Z| + r_\oplus(\delta^{in}_{D-Z}(X))\ge k
+\end{equation}
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+%Note that \eqref{eq:rankin} for $X=V-s$ implies that $|I|\ge k$.
+It is clear that \eqref{it:1} implies \eqref{it:2}. 
+%The necessity of \eqref{eq:rankin} is clear, so l
+Let us prove that \eqref{it:2} implies \eqref{it:1}.  Let $D'=I\cup
+D[V-s]$ (that is, delete the arcs incident with $s$, except those in
+$I$). We will prove that there exists an \indep\  \karb\ in $D'$,
+which will prove our theorem, since $\delta^{in}_{D'}(s)=\emptyset$
+and $|\delta^{out}_{D'}(s)| = |I| = k$. We apply Theorem
+\ref{thm:indepkarb} for $D'$. Assume that $\sum
+\{r_\oplus(\delta^{in}_{D'}(X)): X\in \cX\} < k(|\cX|-1)$ for some
+subpartition \cX. Note that we can assume that
+$r_\oplus(\delta^{in}_{D'}(X)) < k$ for every member $X$ of \cX\ and
+clearly $|\cX|>1$ has to hold. Therefore there must exist a member
+$X\in\cX$ with $s\notin X$ and $r_\oplus(\delta^{in}_{D'}(X))<k$,
+contradicting \eqref{eq:rankin}.
+
+Next we show that \eqref{it:1} implies \eqref{it:3}.  If $B\subseteq
+A$ is an \indep\  \krarb[s] with $I=B\cap \delta^{out}_D(s)\}$,
+$Z\subseteq \delta^{out}_D(s)$ and $X\subseteq V-s$ then $k\le
+\varrho_B(X) = \varrho_{B\cap Z}(X)+ \varrho_{B- Z}(X) \le |B\cap Z| +
+r_\oplus(\delta^{in}_{D-Z}(X)) = |I\cap Z| +
+r_\oplus(\delta^{in}_{D-Z}(X))$.  Finally, we show that \eqref{it:2}
+implies \eqref{it:3}. Take some non-empty $X\subseteq V-s$, let
+$Z=(\delta_D^{out}(s)\cap \delta_D^{in}(X))-I$ and apply
+\eqref{eq:intpoly} for this $X$ and $Z$ to get \eqref{eq:rankin}.
+\end{proof}
+
+%% In our applications below there
+%% will exist a node $s\in V$ such that $\delta^{in}_D(s)=\emptyset$.
+
+%\fixme{The edges entering $s$ are never used here, we could even delete them.}
+
+%% \iffalse
+%% \begin{lemma}\label{lem:intpoly}
+%% Given a digraph $D=(V,A)$ and matroids $M_v=(\delta^{in}_D(v), r_v)$
+%% for every $v\in V$ and a node $s\in V$.  $I\in \cB_s$ if and only if
+%% \eqref{eq:intpoly} holds for every $Z\subseteq \delta^{out}_D(s)$ and
+%% non-empty $X\subseteq V-s$.
+%% \begin{equation}\label{eq:intpoly}
+%% |I\cap Z| + r_\oplus(\delta^{in}_{D-Z}(X))\ge k
+%% \end{equation}
+%% \end{lemma}
+%% \begin{proof}
+%% If $B\subseteq A$ is an \indep\  \krarb[s] with
+%% $I=B\cap \delta^{out}_D(s)\}$, $Z\subseteq \delta^{out}_D(s)$ and
+%% $X\subseteq V-s$ then $k\le \varrho_B(X) = \varrho_{B\cap Z}(X)+
+%% \varrho_{B- Z}(X) \le |B\cap Z| + r_\oplus(\delta^{in}_{D-Z}(X)) =
+%% |I\cap Z| + r_\oplus(\delta^{in}_{D-Z}(X))$.  For the other direction
+%% we apply Lemma \ref{lem:rankin}. To see that \eqref{eq:rankin} holds 
+%% take some non-empty $X\subseteq V-s$,  let $Z=(\delta^{out}(s)\cap \delta^{in}(X))-I$ and apply \eqref{eq:intpoly}.
+%% \end{proof}
+%% \fi
+
+Consider the following polyhedron.
+\begin{eqnarray}
+P=\{x\in \Rset^{\delta^{out}(s)}: x\ge 0\\
+%x\ge 0, x(\delta^{out}(s)) = k\\
+x(Z)\ge k-r_\oplus(\delta^{in}_{D-Z}(X)) \mbox{ for every }\label{eq:xZ}
+Z\subseteq \delta^{out}_D(s) \mbox{ and non-empty }  X\subseteq V-s\}.
+\end{eqnarray}
+Clearly, $P$ is non-empty if and only if
+$r_\oplus(\delta^{in}_{D}(X)\ge k$ for every non-empty $X\subseteq
+V-s$ (this condition is clearly necessary for the non-emptyness,
+otherwise we can not satisfy \eqref{eq:xZ} for $Z=\emptyset$, and if
+this condition holds then $x=\{k\}^{\delta^{out}(s)}\in
+P$). 
+%% \fixme{Shall we include the next sentences? In particular, this
+%% condition requires that $r_v(\delta^{in}_D(v)\ge k)$ for every $v\in
+%% V-s$. However in many other cases we mention $r_v\le k$. In our applications we will have $r_v(\delta^{in}_D(v)= k)$.} 
+Furthermore, it is enough to require \eqref{eq:xZ} for non-empty
+subsets $X$ that contain the head of each arc of $Z$.
+
+\begin{claim}
+If  $r_v\le k$ for every $v\in V-s$ then non-negativity is implied by \eqref{eq:xZ} in the definition of $P$.
+\end{claim}
+\begin{proof}
+Let $st\in A$ be arbitrary and apply \eqref{eq:xZ} for $Z=st$ and
+$X=\{t\}$ to get $x(st)\ge k-r_t(\delta^{in}(t)-st)\ge 0$. 
+\end{proof}
+
+
+Define the set function $p:2^{\delta^{out}_D(s)}\to \Rset$ for a subset $Z\subseteq \delta^{out}_D(s)$ as in \eqref{eq:pZ}.
+\begin{equation}\label{eq:pZ}
+p(Z) = \max \{k-r_\oplus(\delta^{in}_{D-Z}(X)): \emptyset \ne X\subseteq V-s\}.
+\end{equation}
+Note that $p\le k$ and
+$p(\delta_D^{out}(s)=k-r_\oplus(\delta^{in}_{D-\delta_D^{out}(s)}(V))=k$. Furthermore,
+$p(\emptyset)=0$ (take an arbitrary $v\in V-s$ and use $r_v(\delta_D^{in}(v))=k$ to get that $p(\emptyset)\ge k-r_\oplus(\delta_D^{in}(v))=0$) and $p$ is monotone increasing.  With this definition we get the following.
+
+\[P=\{x\in \Rset^{\delta^{out}(s)}: x(Z)\ge p(Z)\mbox{ for every }Z\subseteq \delta^{out}_D(s)\}\]
+
+Let us introduce the following notation. For a set $Z\subseteq
+\delta_D^{out}(s)$ let $X_Z\subseteq V-s$ be an arbitrary subset that
+attains the maximum in the definition \eqref{eq:pZ} of $p(Z)$ (that
+is, $X_Z\ne \emptyset$ and $p(Z)=k-r_\oplus(\delta^{in}_{D-Z}(X_Z))$).
+
+\begin{claim}\label{cl:rplus}
+Let $Z_1, Z_2\subseteq \delta_D^{out}(s)$ and  $X_1, X_2\in
+V-s$ be arbitrary, then 
+\begin{equation}
+r_\oplus(\delta^{in}_{D-Z_1}(X_1))+ r_\oplus(\delta^{in}_{D-Z_2}(X_2)) \ge r_\oplus(\delta^{in}_{D-(Z_1\cup Z_2)}(X_1\cup X_2)) + r_\oplus(\delta^{in}_{D-(Z_1\cap Z_2)}(X_1\cap X_2)).
+\end{equation}
+\end{claim}
+\begin{proof}
+Since $r_\oplus$ is defined as $r_\oplus(E)=\sum_{v\in V}r_v(E\cap
+\delta^{in}_D(v))$ for an arbitrary $E\subseteq A$, it is enough to
+prove that \eqref{eq:rvsub} holds for an arbitrary $v\in V$ (where we
+use the short notation $\delta^{in}_{\delta^{in}_D(v)-Z}(X)$ instead
+of $\delta^{in}_{D-Z}(X))\cap \delta_D^{in}(v)$).
+\begin{equation}\label{eq:rvsub}
+r_v(\delta^{in}_{\delta^{in}_D(v)-Z_1}(X_1))+ r_v(\delta^{in}_{\delta^{in}_D(v)-Z_2}(X_2)) \ge r_v(\delta^{in}_{\delta^{in}_D(v)-(Z_1\cup Z_2)}(X_1\cup X_2)) + r_v(\delta^{in}_{\delta^{in}_D(v)-(Z_1\cap Z_2)}(X_1\cap X_2)).
+\end{equation}
+%% \begin{equation}\label{eq:rvsub}
+%% r_v(\delta^{in}_{D-Z_1}(X_1)\cap \delta^{in}_D(v))+ r_v(\delta^{in}_{D-Z_2}(X_2)\cap \delta^{in}_D(v)) \ge r_v(\delta^{in}_{D-(Z_1\cup Z_2)}(X_1\cup X_2)\cap \delta^{in}_D(v)) + r_v(\delta^{in}_{D-(Z_1\cap Z_2)}(X_1\cap X_2)\cap \delta^{in}_D(v)).
+%% \end{equation}
+If $v\notin X_1\cup X_2$ then there is nothing to prove, every term is
+zero on both sides of \eqref{eq:rvsub}. If $v\in X_1-X_2$ then we have to observe that the
+second term is zero on both sides of \eqref{eq:rvsub}, and that
+$r_v(\delta^{in}_{\delta^{in}_D(v)-Z_1}(X_1))\ge
+r_v(\delta^{in}_{\delta^{in}_D(v)-(Z_1\cup Z_2)}(X_1\cup X_2))$ is
+implied by the mononicity of $r_v$. Clearly, the case $v\in X_2-X_1$
+is analogous, therefore assume $v\in X_1\cap X_2$. Observe that \eqref{eq:rv1} and \eqref{eq:rv2} holds. For an illustration, see Figure \ref{fig:rv}.
+\begin{eqnarray}\label{eq:rv1}
+\delta^{in}_{\delta^{in}_D(v)-Z_1}(X_1)\cap \delta^{in}_{\delta^{in}_D(v)-Z_2}(X_2) = \delta^{in}_{\delta^{in}_D(v)-(Z_1\cup Z_2)}(X_1\cup X_2)\\
+\label{eq:rv2} \delta^{in}_{\delta^{in}_D(v)-Z_1}(X_1)\cup \delta^{in}_{\delta^{in}_D(v)-Z_2}(X_2) = \delta^{in}_{\delta^{in}_D(v)-(Z_1\cap Z_2)}(X_1\cap X_2).
+\end{eqnarray}
+\begin{figure}
+%[!ht]
+\begin{center}
+\input{rv.pdf_t}
+\caption{An illustration for the proof of \eqref{eq:rv1} and \eqref{eq:rv2}. The arcs of $(Z_1-Z_2)\cap \delta_D^{in}(v)$ are drawn with blue, those in $(Z_2-Z_1)\cap \delta_D^{in}(v)$ are red, and those in $(Z_1\cap Z_2)\cap \delta_D^{in}(v)$ are magenta.}
+\label{fig:rv}
+\end{center}
+\end{figure}
+This, together with the submodularity of $r_v$ finishes the proof.
+\end{proof}
+
+
+%% \begin{claim}
+%% Let $Z_1, Z_2\subseteq \delta_D^{out}(s)$ and assume that $X_1, X_2\in
+%% V-s$ attain the maximum in the definition of $p(Z_1)$ and $p(Z_2)$,
+%% respectively.  (That is, for both $i=1,2$ the following hold: $X_i\ne
+%% emptyset$, $X_i$ contains the head of every arc of $Z_i$ and
+%% $p(Z_i)=k-r_\oplus(\delta^{in}_{D-Z}(X_i))$.) Assume that $X_1\cap
+%% X_2\ne \emptyset$. Then $p(Z_1) + p(Z_2) \le p(Z_1\cap Z_2) + p(Z_1\cup Z_2)$.
+%% \end{claim}
+%% \begin{proof}
+%% \end{proof}
+
+Recall that a function $p:2^S\to \Rset$ is called \textbf{near
+  supermodular} if $p(X)+p(Y)\le p(X\cap Y) + p(X\cup Y)$ holds for
+every intersecting pair $X,Y\subseteq V$ of non-separable sets (where
+a set $X$ is separable if there exists a partition $X_1, X_2, \dots,
+X_t$ of $X$ such that $p(X)\le \sum_i p(X_i)$).
+
+\newcommand{\dels}{\ensuremath{\delta_D^{out}(s)}}
+
+\begin{claim}\label{cl:headin}
+If $Z\subseteq \dels$ is non-separable then $X_Z$ contains the head of every arc of $Z$.
+\end{claim}
+\begin{proof}
+Assume not and let $Z_1\subsetneq Z$ be the subset of those arcs which
+have their head in $X_Z$. Then
+$p(Z)=k-r_\oplus(\delta^{in}_{D-Z}(X_Z))=k-r_\oplus(\delta^{in}_{D-Z_1}(X_Z))\le
+p(Z_1)$. (By the monotonicity of $p$, we have $p(Z)=p(Z_1)$.) But then
+$p(Z)\le p(Z_1)+p(Z-Z_1)$ by the non-negativity of $p$, contradicting
+the non-separability of $Z$.
+\end{proof}
+
+\begin{thm}\label{thm:supermod}
+The function $p$ defined in \eqref{eq:pZ} is near supermodular.
+\end{thm}
+
+\begin{proof}
+Let $Z_1, Z_2\subseteq\delta^{out}_D(s) $ be non-separable sets so
+that $Z_1\cap Z_2\ne \emptyset$. By Claim \ref{cl:headin}, $X_i=X_{Z_i}$ contains the head of each arc of $Z_i$ for both $i=1,2$.
+%% Let $X_1, X_2\subseteq V-s$ attain
+%% the maximum in the definition \eqref{eq:pZ} of $p(Z_1)$ and $p(Z_2)$,
+%% respectively.  (That is, for both $i=1,2$ the following hold: $X_i\ne
+%% emptyset$, $X_i$ contains the head of every arc of $Z_i$ and
+%% $p(Z_i)=k-r_\oplus(\delta^{in}_{D-Z_i}(X_i))$.)  
+%% Clearly, $X_1\cap
+%% X_2$ ($X_1\cup X_2$) contains the head of every arc of $Z_1\cap Z_2$
+%% ($Z_1\cup Z_2$, resp.), and $Z_1\cap Z_2\ne \emptyset$ implies
+%% $X_1\cap X_2\ne \emptyset$, therefore we have by 
+This implies that $X_1\cap X_2\ne \emptyset$, and  Claim \ref{cl:rplus} gives
+\begin{eqnarray*}
+p(Z_1)+p(Z_2)= \sum_{i=1,2}k-r_\oplus(\delta^{in}_{D-Z_i}(X_i))\le \\
+2k-\left(r_\oplus(\delta^{in}_{D-(Z_1\cup Z_2)}(X_1\cup X_2)) + r_\oplus(\delta^{in}_{D-(Z_1\cap Z_2)}(X_1\cap X_2))\right)\le \\
+p(Z_1\cap Z_2)+p(Z_1\cup Z_2).
+\end{eqnarray*}
+\end{proof}
+
+The following claim describes the (fully supermodular) truncation of $p$.
+
+\begin{claim}\label{cl:wedge}
+For any $F\subseteq \delta^{out}_D(s)$ 
+\begin{equation}\label{eq:pwedge2}
+p^\wedge(F)=\max\{\sum \{k-r_\oplus(\delta^{in}_{D-F}(X)): X\in \cX\}: \cX \mbox{ is a subpartition of }V-s\}.
+\end{equation}
+\end{claim}
+\begin{proof}
+Let $F\subseteq \delta^{out}_D(s)$ and let \cZ\ be a partition of
+$F$ that gives $p^\wedge(F)=\sum \{p(Z): Z\in \cZ\}$ and, subject to
+this, $|\cZ|$ is minimal. Clearly, every $Z\in \cZ$ is non-separable.
+We claim that $\{X_Z: Z\in \cZ\}$ is a subpartition of $V-s$. If there
+exist $Z_1, Z_2\in \cZ$ so that $X_{Z_1}\cap X_{Z_2}\ne \emptyset$
+then $p(Z_1)+p(Z_2)\le 2k-(r_\oplus(\delta^{in}_{D-(Z_\cap
+  Z_2)}(X_{Z_1}\cap X_{Z_2})) + r_\oplus(\delta^{in}_{D-(Z_\cup
+  Z_2)}(X_{Z_1}\cup X_{Z_2})))\le p(Z_1\cup Z_2) + p(\emptyset) =
+p(Z_1\cup Z_2)$, therefore $\cZ'=\cZ-\{Z_1, Z_2\} + \{Z_1\cup Z_2\}$
+also gives $p^\wedge(F)=\sum \{p(Z): Z\in \cZ'\}$, contradicting our
+choice for \cZ. 
+\end{proof}
+
+
+\begin{cor}
+The polyhedron $B=\{x\in P: x( \delta^{out}_D(s)) = k\}$ is a base
+polyhedron. It is the convex hull of incidence vectors of members of
+$\cB_s$.
+\end{cor}
+\begin{proof}
+We show that $x\in B$ implies $x\le 1$. This together with Theorem
+\ref{thm:supermod} and Lemma \ref{lem:rankin} proves the
+corollary. Take $x\in B$ and $st\in A$. Let $Z=\delta^{out}(s)-st$ and
+$X= V-s$. By \eqref{eq:xZ} we have $k-x(st)=x(Z)\ge k-r_\oplus(\delta^{in}_{st}(V-s)) = k-r_t(\{st\}) \ge k-1$.
+\end{proof}
+
+\begin{cor}\label{cor:indepmatroid}
+Given a digraph $D=(V,A)$, a node $s\in V$ and matroids $M_v=(\delta^{in}_D(v), r_v)$
+for every $v\in V-s$.  The family
+$\cB^s=\{I\subseteq \delta^{out}_D(s): |I|= k$ and there exists an
+\indep\  \krarb[s] $B\subseteq A$ with $I=B\cap
+\delta^{out}_D(s)\}$, if non-empty, defines the family of bases of a
+matroid $M_s$ on ground set $\delta^{out}_D(s)$. The family is not empty if
+and only if 
+\begin{enumerate}[(a)]
+\item \label{it:Pnempty} $r_\oplus(\delta^{in}_{D}(X)\ge k$ for every non-empty $X\subseteq
+V-s$, and
+\item \label{it:Bnempty} $\sum \{k-r_\oplus(\delta^{in}_{D[V-s]}(X)): X\in \cX\}\le k $ for every  is a subpartition \cX\ of $V-s$.
+%  $\sum \{p(Z): Z\in \cZ\}\le k$ for every partition $\cZ$ of $\delta^{out}_D(s)$.
+\end{enumerate}
+The rank function of the matroid defined by $\cB^s$ is the following:
+\[r^s(E)=\min\{\sum_{X\in \cX} r_\oplus(\delta^{in}_{E\cup D[V-s]}(X)) - k(|\cX|-1): \cX \mbox{ is a subpartition of }V-s\}.\]
+\end{cor}
+\begin{proof}
+Consider the function $p^\wedge:2^{\delta^{out}_D(s)}\to \Rset$ defined by \eqref{eq:pwedge} for a subset $W\subseteq \delta^{out}_D(s)$.
+\begin{equation}\label{eq:pwedge}
+p^\wedge(W)=\max\{\sum \{p(Z): Z\in \cZ\}: \cZ \mbox{ is a subpartition of }W\}.
+\end{equation}
+By Theorem \ref{thm:wedge}, $p^\wedge$ is monotone and
+supermodular, and clearly $P=\{x\in \Rset^{\delta^{out}(s)}: x\ge 0,
+x(W)\ge p^\wedge(W)\mbox{ for every }W\subseteq
+\delta^{out}_D(s)\}$. Thus $B=\{x\in P: x( \delta^{out}_D(s)) = k\}$
+is not empty if and only if $P\ne \emptyset$ and
+$p^\wedge(\delta^{out}_D(s))=p(\delta^{out}_D(s))=k$, that is, if and
+only if both \eqref{it:Pnempty} and \eqref{it:Bnempty} hold (where we used Claim \ref{cl:wedge} to get $p^\wedge(\delta^{out}_D(s))$).
+%To prove the rank function we observe the following.
+%Thus, 
+Since the fully supermodular function describing the base polyhedron $B$ is $p^\wedge$, it is the co-rank function of the matroid $M_s$, and its rank function is given by the following formula
+%The submodular function $r^s$ defining the base polyhedron $B$ is then
+%defined
+\[r^s(Z)=p^\wedge(S)- p^\wedge(S-Z)=k-p^\wedge(S-Z) = \min\{\sum_{X\in \cX} r_\oplus(\delta^{in}_{Z\cup D[V-s]}(X)) - k(|\cX|-1): \cX \mbox{ is a subpartition of }V-s\}.\]
+\end{proof}
+%% We want to show that the polyhedron $P=\{x\in \Rset^{\delta^{out}(s)}:
+%% x\ge 0, x(Z)\ge k-r_\oplus(\delta^{in}_{D-Z}(X)) $ for every
+%% $Z\subseteq \delta^{out}_D(s)$ and non-empty $X\subseteq V-s\}$ is a
+%% base-polyhedron. By Lemma \ref{lem:} Clearly, 
+%% \begin{eqnarray}
+%% P=\{x\in \Rset^{\delta^{out}(s)}:x\ge 0, x(\delta^{out}(s)) = k\\
+%% x(Z)\ge k-r_\oplus(\delta^{in}_{D-Z}(X)) \mbox{ for every }
+%% $Z\subseteq \delta^{out}_D(s)$ \mbox{ and non-empty }  $X\subseteq V-s\}.
+%% \end{eqnarray}
+
+\section{Matroidal description of \cL-tight \karb s}
+
+
+Given a digraph $D=(V,A)$ and a laminar family $\cL\subseteq 2^V$ and
+assume that there exists an \cL-tight \karb\ in
+$D$. Without loss of generality we will assume that singletons and $V$
+are in \cL, that is $\cL_0\subseteq \cL$. Let furthermore $D^+=(V+s,
+A+\{sv$ in $ M $ copies for every $v\in V\})$, where $s \notin V$ and
+$M$ is a sufficiently large integer (for example $M=|A|+1$). Clearly, the
+\cL-tight arborescences in $D$ and the \cL-tight arborescences in
+$D^+$ naturally correspond to each other (since $V\in \cL$), and the
+\cL-tight arborescences in $D^+$ are all rooted in $s$.
+For every $F\in \cL$ let $D_F=D^+/(V+s-F)$ (that is, we contract
+$V+s-F$ in $D^+$ and we delete the arising loops) and let $s_F$ be the image of $s$. Note that $\delta^{out}_{D_F}(s_F) = \delta^{in}_{D^+}(F)$. 
+
+\begin{thm}\label{thm:MF}
+The family $\cB_F=\{B\subseteq \delta^{out}_{D_F}(s_F): |B|= k$ and $B$
+can be extended to a $\cL[F]$-tight \krarb[s_F] in
+$D_F\}$ forms the family of bases of a matroid
+$M_F=(\delta^{out}_{D_F}(s_F), r_F)$. 
+%% The rank function is the
+%% following: $r_F(E)= \min\{\sum_{X\in \cX}r_\oplus(\delta^{in}_{E\cup
+%%   D[F]}(X)-k(|\cX|-1):\cX$ is a subpartition of $F\}$, where
+%% $r_\oplus$ is the rank function of .
+\end{thm}
+\newcommand{\Fc}{\hat{F}} \newcommand{\Dc}{\hat{D}}
+\newcommand{\Bc}{\hat{B}}
+\begin{proof}
+We recursively show that the family $\cB_F$ indeed defines a matroid $M_F$ for every $F\in \cL$. For
+the singletons $\{v\}\in \cL$ it is clear that $M_{\{v\}}$ is the
+uniform matroid of rank $k$ on ground set $\delta_{D^+}^{in}(v)$. Let $F\in
+\cL$ be a non-singleton and assume that $M_{F'}$ has already been
+defined for every $F'\in \cL$ that is a proper subset of $F$ (that is,
+for members of $\cL[F]-F$). We introduce some notation. Let $F^1, F^2,
+\dots , F^l$ be the maximal members of $\cL[F]-F$. We will contract
+$F^i$ into a node $f^i$ for every $i=1,2,\dots,l$.  Let
+ $\Fc = F/\{F^1, F^2, \dots , F^l\}$ be the set that is obtained
+from $F$ after this contraction, and 
+%by contracting $F^i$ into a node $f^i$ for every
+%$i=1,2,\dots,l$.  S
+similarly, for a subgraph $(F+s_F, B)$ of $D_F$ we will use the
+notation $\Bc = B/\{F^1, F^2, \dots , F^l\}$ to mean the graph that is
+obtained from $(F+s_F, B)$ after the contraction (and deletion of the arising loops: 
+% by contracting $F^i$ into a node $f^i$ for
+%every $i=1,2,\dots,l$ and deleting the loops arising from arcs induced
+%in some $F^i$ 
+that is, the node set of $B/\cL[F]$ is $\Fc+s_F$). In
+particular, let $\Dc=D_{F}/\{F^1, F^2,
+\dots , F^l\}$. The matroids $M_{F^i}$ naturally
+give rise to matroids $M_{f_i}=(\delta^{in}_{\Dc}(f_i), r_{f_i})$ for
+every $i$.
+%Let $\cM = \{M_{f_i}: i=1,2,\dots,l\}$ be the collection of these matroids. 
+%The following claim states that $\cL[F]$-tight arborescences in $D_F$ and 
+\begin{claim}
+If $B\subseteq A(D_{F})$ is an $\cL[F]$-tight
+\krarb[s_F] then $\Bc=B/\cL[F]$ is 
+$M_{f_i}$-\indep\  for every $i=1,2,\dots, l$. Conversely, if
+$B'\subseteq \Dc$ is a \krarb[s_F] in $\Dc$ that is
+$M_{f^i}$-\indep\  for every $i=1,2,\dots, l$ and
+$|\delta_{B'}^{out}(s_F)|=k$ then there exists a $\cL[F]$-tight
+arborescence $B\subseteq A(D_{F})$ such that $\Bc=B'$.
+\end{claim}
+\begin{proof}
+The first statement is clear from the definition of the matroids
+$M_{f^i}$. For the other direction, let $B'\subseteq \Dc$ be a
+\krarb[s_F] in $\Dc$ that is $M_{f^i}$-\indep\  for every
+$i=1,2,\dots, l$ and $|\delta_{B'}^{out}(s_F)|=k$. Consider $B'$ as a
+subgraph of $D_F$ and note that $\delta^{in}_{B'}(F^i)$ is a base of
+$M_{F^i}$ for every $i$. By the definition of $M_{F^i}$,
+$\delta^{in}_{B'}(F^i)$ can be extended to a $\cL[F^i]$-tight
+arborescence $B_i$ in $D_{F^i}$ for every $i$. Let $B=B'\bigcup \cup_iB_i$: it is a $\cL[F]$-tight arborescence and $\Bc= B'$, as claimed.
+\end{proof}
+The claim together with Corollary \ref{cor:indepmatroid} gives the result.
+\end{proof}
+
+\begin{cor}
+The matroids defined in Theorem \ref{thm:MF} are such that
+a $k$-arborescence $B\subseteq A(D^+)$ is \cL-tight if and only if $B\cap \delta^{in}(F)$ is a base of $M_F$ for every $F\in \cL$.
+\end{cor}
+
+Theorem \ref{thm:MF} for $F=V\in \cL$ gives the following corollary.
+\begin{cor}
+The root vectors of \cL-tight arborescences in $D$ determine a base polyhedron.
+\end{cor}
+
+Consider the family
+$\cB'_F=\{B\subseteq \delta^{in}_{D^+}(F): |B|= k$ and $B$
+can be extended to a $\cL$-tight \krarb[s] in
+$D^+\}\subseteq \cB_F$. \fixme{Is this also a family of bases? }
+
+
+\section{Blocking \cL-tight \karb{s}}
+
+
+
+
+\bibliographystyle{amsplain} \bibliography{bkmincost}
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
